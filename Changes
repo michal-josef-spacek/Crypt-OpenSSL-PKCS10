@@ -1,0 +1,9 @@
+Revision history for Perl extension Crypt::OpenSSL::PKCS10.
+
+0.03  Fri Jan 22 21:24:45 2006
+	- less memory leaks, but still there are some :(
+
+0.01  Fri Jan 20 21:24:45 2006
+	- original version; created by h2xs 1.23 with options
+		-A -n Mytest
+
