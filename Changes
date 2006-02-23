@@ -1,5 +1,11 @@
 Revision history for Perl extension Crypt::OpenSSL::PKCS10.
 
+0.05  Sun Feb 19 23:31:45 2006
+	- Now subject can contain oids too (like /C=RO/O=UTI/OU=ssi/2.5.4.9=my street)
+
+0.04  <unreleased>
+	- Require perl 5.8.0 (to work on older OS)
+
 0.03  Fri Jan 22 21:24:45 2006
 	- less memory leaks, but still there are some :(
 

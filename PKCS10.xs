@@ -139,11 +139,11 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 
 	for (i = 0; i < ne_num; i++)
 		{
-		if ((nid=OBJ_txt2nid(ne_types[i])) == NID_undef)
+		/*if ((nid=OBJ_txt2nid(ne_types[i])) == NID_undef)
 			{
 			croak("Subject Attribute %s has no known NID, skipped\n", ne_types[i]);
 			continue;
-			}
+			}*/
 
 		if (!*ne_values[i])
 			{
@@ -151,7 +151,8 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 			continue;
 			}
 
-		if (!X509_NAME_add_entry_by_NID(n, nid, chtype, (unsigned char*)ne_values[i], -1,-1,mval[i]))
+		//if (!X509_NAME_add_entry_by_NID(n, nid, chtype, (unsigned char*)ne_values[i], -1,-1,mval[i]))
+		if (!X509_NAME_add_entry_by_txt(n, (unsigned char*)ne_types[i], chtype, (unsigned char*)ne_values[i], -1,-1,mval[i]))
 			goto error;
 		}
 

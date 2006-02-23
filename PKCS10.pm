@@ -1,6 +1,6 @@
 package Crypt::OpenSSL::PKCS10;
 
-use 5.008002;
+use 5.008000;
 use strict;
 use warnings;
 require Exporter;
@@ -30,7 +30,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 	
 #);
 
-our $VERSION = '0.03';
+our $VERSION = '0.05';
 
 require XSLoader;
 XSLoader::load('Crypt::OpenSSL::PKCS10', $VERSION);
