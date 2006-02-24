@@ -30,7 +30,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 	
 #);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 require XSLoader;
 XSLoader::load('Crypt::OpenSSL::PKCS10', $VERSION);
@@ -77,10 +77,12 @@ Crypt::OpenSSL::PKCS10 provides the ability to create PKCS10 certificate request
 Create a new Crypt::OpenSSL::PKCS10 object by generating a new RSA key pair. There is one optional argument, the key size,
 which has the default value of 1024 if omitted.
 
-=item new_from_rsa
+=item new_from_rsa( $rsa_object )
 
-Create a new Crypt::OpenSSL::PKCS10 object by generating a new RSA key pair. There is one optional argument, the key size,
-which has the default value of 1024 if omitted.
+Create a new Crypt::OpenSSL::PKCS10 object by using key information from a Crypt::OpenSSL::RSA object. Here is an example:
+
+  my $rsa = Crypt::OpenSSL::RSA->generate_key(512);
+  my $req = Crypt::OpenSSL::PKCS10->new_from_rsa($rsa);
 
 =back
 
@@ -155,6 +157,16 @@ On request:
 
 	NID_key_usage NID_subject_alt_name NID_netscape_cert_type NID_netscape_comment
 	NID_ext_key_usage
+
+=head1 BUGS
+
+If you destroy $req object that is linked to a Crypt::OpenSSL::RSA object, the RSA private key is also freed, 
+thus you can't use latter object anymore. Avoid this:
+  
+  my $rsa = Crypt::OpenSSL::RSA->generate_key(512);
+  my $req = Crypt::OpenSSL::PKCS10->new_from_rsa($rsa);
+  undef $req;
+  print $rsa->get_private_key_string();
 
 =head1 SEE ALSO
 

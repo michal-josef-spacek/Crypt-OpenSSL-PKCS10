@@ -15,7 +15,7 @@ typedef struct
 {
     X509_REQ* req;
     EVP_PKEY *pk;
-    RSA *rsa;
+    RSA **rsa;
     STACK_OF(X509_EXTENSION) *exts;
 } pkcs10Data;
 
@@ -132,30 +132,24 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 			}
 		*bp++ = '\0';
 		ne_num++;
-		}	
+		}
 
 	if (!(n = X509_NAME_new()))
 		goto error;
 
 	for (i = 0; i < ne_num; i++)
 		{
-		/*if ((nid=OBJ_txt2nid(ne_types[i])) == NID_undef)
-			{
-			croak("Subject Attribute %s has no known NID, skipped\n", ne_types[i]);
-			continue;
-			}*/
-
 		if (!*ne_values[i])
 			{
 			croak("No value provided for Subject Attribute %s, skipped\n", ne_types[i]);
 			continue;
 			}
 
-		//if (!X509_NAME_add_entry_by_NID(n, nid, chtype, (unsigned char*)ne_values[i], -1,-1,mval[i]))
 		if (!X509_NAME_add_entry_by_txt(n, (unsigned char*)ne_types[i], chtype, (unsigned char*)ne_values[i], -1,-1,mval[i]))
 			goto error;
 		}
 
+	OPENSSL_free(mval);
 	OPENSSL_free(ne_values);
 	OPENSSL_free(ne_types);
 	OPENSSL_free(buf);
@@ -198,7 +192,7 @@ int add_ext(STACK_OF(X509_REQUEST) *sk, int nid, char *value)
 	return 1;
 	}
 
-SV* make_pkcs10_obj(SV* p_proto, X509_REQ* p_req, EVP_PKEY* p_pk, STACK_OF(X509_EXTENSION)* p_exts, RSA *p_rsa)
+SV* make_pkcs10_obj(SV* p_proto, X509_REQ* p_req, EVP_PKEY* p_pk, STACK_OF(X509_EXTENSION)* p_exts, RSA **p_rsa)
 {
     pkcs10Data* pkcs10;
 
@@ -340,11 +334,10 @@ new(class, keylen = 1024)
   if (!EVP_PKEY_assign_RSA(pk,rsa))
 		croak ("%s - EVP_PKEY_assign_RSA", class);
 	
-	//printf("new\n");
 	X509_REQ_set_pubkey(x,pk);
 	X509_REQ_set_version(x,0L);
 	
-  RETVAL = make_pkcs10_obj(class, x, pk, NULL, rsa);
+  RETVAL = make_pkcs10_obj(class, x, pk, NULL, NULL);
   
 	OUTPUT:
         RETVAL
@@ -357,14 +350,13 @@ DESTROY(pkcs10)
 	//BIO *bio_err;
 	
 	PPCODE:
-  //printf("DESTROY\n");
-  //bio_err=BIO_new_fp(stderr, BIO_NOCLOSE);
-	//if (pkcs10->pk)   EVP_PKEY_free(pkcs10->pk); pkcs10->pk = 0;
-	if (pkcs10->rsa)  RSA_free(pkcs10->rsa); pkcs10->rsa = 0;
+	//bio_err=BIO_new_fp(stderr, BIO_NOCLOSE);
+	if (pkcs10->pk)   EVP_PKEY_free(pkcs10->pk); pkcs10->pk = 0;
+	if (pkcs10->rsa) *pkcs10->rsa = 0;
 	if (pkcs10->req)  X509_REQ_free(pkcs10->req); pkcs10->req = 0;
 	Safefree(pkcs10);
-	/*CRYPTO_cleanup_all_ex_data();
-	CRYPTO_mem_leaks(bio_err);
+	CRYPTO_cleanup_all_ex_data();
+	/*CRYPTO_mem_leaks(bio_err);
 	BIO_free(bio_err);*/
 
 SV*
@@ -393,7 +385,7 @@ new_from_rsa(class, p_rsa)
 	X509_REQ_set_pubkey(x,pk);
 	X509_REQ_set_version(x,0L);
 	
-  RETVAL = make_pkcs10_obj(class, x, pk, NULL, NULL);
+  RETVAL = make_pkcs10_obj(class, x, pk, NULL, &rsa->rsa);
 
 	OUTPUT:
         RETVAL
@@ -468,7 +460,6 @@ get_pem_pk(pkcs10,...)
   if(!PEM_write_bio_PrivateKey(bio,pkcs10->pk,NULL,NULL,0,NULL,NULL))
     croak ("%s - PEM_write_bio_X509_REQ", pkcs10->req);
 
-	//BIO_printf(bio, "sisis");
 	RETVAL = sv_bio_final(bio);
 
 	OUTPUT:
