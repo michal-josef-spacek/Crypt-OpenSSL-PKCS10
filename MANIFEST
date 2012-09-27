@@ -8,3 +8,4 @@ README
 t/Mytest.t
 PKCS10.pm
 META.yml                                 Module meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)
