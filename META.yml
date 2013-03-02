@@ -19,4 +19,4 @@ no_index:
     - inc
 requires:
   Crypt::OpenSSL::RSA: 0
-version: 0.08
+version: 0.09

@@ -32,8 +32,8 @@ typedef struct
   if (New(0, p_var, p_size, p_type) == NULL) \
     { PACKAGE_CROAK("unable to alloc buffer"); }
 
-int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int length);
-int add_ext(STACK_OF(X509_REQUEST) *sk, int nid, char *value);
+//int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int length);
+//int add_ext(STACK_OF(X509_REQUEST) *sk, int nid, char *value);
 X509_NAME *parse_name(char *str, long chtype, int multirdn); 
 
 /*
