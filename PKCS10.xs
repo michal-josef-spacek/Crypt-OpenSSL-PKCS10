@@ -32,6 +32,7 @@ typedef struct
   if (New(0, p_var, p_size, p_type) == NULL) \
     { PACKAGE_CROAK("unable to alloc buffer"); }
 
+int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int length);
 int add_ext(STACK_OF(X509_REQUEST) *sk, int nid, char *value);
 X509_NAME *parse_name(char *str, long chtype, int multirdn); 
 
@@ -52,7 +53,6 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 	int i, ne_num = 0;
 
 	X509_NAME *n = NULL;
-	int nid;
 
 	if (!buf || !ne_types || !ne_values)
 		{
@@ -155,7 +155,7 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 	OPENSSL_free(buf);
 	return n;
 
-error:
+	error:
 	X509_NAME_free(n);
 	if (ne_values)
 		OPENSSL_free(ne_values);
@@ -165,17 +165,6 @@ error:
 		OPENSSL_free(buf);
 	return NULL;
 }
-
-static void callback(int p, int n, void *arg)
-	{
-	char c='B';
-
-	if (p == 0) c='.';
-	if (p == 1) c='+';
-	if (p == 2) c='*';
-	if (p == 3) c='\n';
-	fputc(c,stderr);
-	}
 
 /* Add extension using V3 code: we can set the config file as NULL
  * because we wont reference any other sections.
@@ -192,19 +181,38 @@ int add_ext(STACK_OF(X509_REQUEST) *sk, int nid, char *value)
 	return 1;
 	}
 
+/*  Add an extention by setting the raw ASN1 octet string.
+ */
+int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int length)
+	{
+	X509_EXTENSION *ex;
+	ASN1_STRING *asn;
+
+	asn = M_ASN1_OCTET_STRING_new();
+	ASN1_OCTET_STRING_set(asn, value, length);
+
+	ex = X509_EXTENSION_create_by_NID(NULL, nid, 0, asn);
+	if (!ex)
+		return 0;
+	sk_X509_EXTENSION_push(sk, ex);
+
+	return 1;
+	}
+
+
 SV* make_pkcs10_obj(SV* p_proto, X509_REQ* p_req, EVP_PKEY* p_pk, STACK_OF(X509_EXTENSION)* p_exts, RSA **p_rsa)
 {
-    pkcs10Data* pkcs10;
+	pkcs10Data* pkcs10;
 
-    CHECK_NEW(pkcs10, 1, pkcs10Data);
-    pkcs10->req = p_req;
-    pkcs10->pk = p_pk;
-    pkcs10->exts = p_exts;
-    pkcs10->rsa = p_rsa;
+	CHECK_NEW(pkcs10, 1, pkcs10Data);
+	pkcs10->req = p_req;
+	pkcs10->pk = p_pk;
+	pkcs10->exts = p_exts;
+	pkcs10->rsa = p_rsa;
 
-    return sv_bless(
-        newRV_noinc(newSViv((IV) pkcs10)),
-        (SvROK(p_proto) ? SvSTASH(SvRV(p_proto)) : gv_stashsv(p_proto, 1)));
+	return sv_bless(
+		newRV_noinc(newSViv((IV) pkcs10)),
+		(SvROK(p_proto) ? SvSTASH(SvRV(p_proto)) : gv_stashsv(p_proto, 1)));
 }
 
 /* stolen from OpenSSL.xs */
@@ -330,14 +338,14 @@ new(class, keylen = 1024)
 	if ((x=X509_REQ_new()) == NULL)
 		croak ("%s - can't create req", class);
 
-  rsa=RSA_generate_key(keylen, RSA_F4, NULL, NULL);
-  if (!EVP_PKEY_assign_RSA(pk,rsa))
+	rsa=RSA_generate_key(keylen, RSA_F4, NULL, NULL);
+	if (!EVP_PKEY_assign_RSA(pk,rsa))
 		croak ("%s - EVP_PKEY_assign_RSA", class);
 	
 	X509_REQ_set_pubkey(x,pk);
 	X509_REQ_set_version(x,0L);
 	
-  RETVAL = make_pkcs10_obj(class, x, pk, NULL, NULL);
+	RETVAL = make_pkcs10_obj(class, x, pk, NULL, NULL);
   
 	OUTPUT:
         RETVAL
@@ -378,14 +386,14 @@ new_from_rsa(class, p_rsa)
 	if ((x=X509_REQ_new()) == NULL)
 		croak ("%s - can't create req", class);
 
-  rsa = (Crypt__OpenSSL__RSA	*) SvIV(SvRV(p_rsa));
-  if (!EVP_PKEY_assign_RSA(pk,rsa->rsa))
+	rsa = (Crypt__OpenSSL__RSA	*) SvIV(SvRV(p_rsa));
+	if (!EVP_PKEY_assign_RSA(pk,rsa->rsa))
 		croak ("%s - EVP_PKEY_assign_RSA", class);
 	
 	X509_REQ_set_pubkey(x,pk);
 	X509_REQ_set_version(x,0L);
 	
-  RETVAL = make_pkcs10_obj(class, x, pk, NULL, &rsa->rsa);
+	RETVAL = make_pkcs10_obj(class, x, pk, NULL, &rsa->rsa);
 
 	OUTPUT:
         RETVAL
@@ -403,67 +411,67 @@ sign(pkcs10)
 		croak ("X509_REQ_sign");
 
 	OUTPUT:
-	  RETVAL
+	RETVAL
 
 SV*
 get_pem_req(pkcs10,...)
 	pkcs10Data *pkcs10;
   
-  ALIAS:
-  write_pem_req = 1
-  PROTOTYPE: $;$
+	ALIAS:
+	write_pem_req = 1
+	PROTOTYPE: $;$
 
 	PREINIT:
 	BIO *bio;
 
 	CODE:
-  if((ix != 1 && items > 1) || (ix == 1 && items != 2))
-      croak("get_pem_req illegal/missing args");
-  if(items > 1) {
-     bio = sv_bio_create_file(ST(1));
-  } else {
-     bio = sv_bio_create();
-  }
+	if((ix != 1 && items > 1) || (ix == 1 && items != 2))
+		croak("get_pem_req illegal/missing args");
+	if(items > 1) {
+		bio = sv_bio_create_file(ST(1));
+	} else {
+		bio = sv_bio_create();
+	}
 
 	/* get the certificate back out in a specified format. */
 
-  if(!PEM_write_bio_X509_REQ(bio,pkcs10->req))
-    croak ("PEM_write_bio_X509_REQ");
+	if(!PEM_write_bio_X509_REQ(bio,pkcs10->req))
+		croak ("PEM_write_bio_X509_REQ");
 
 	RETVAL = sv_bio_final(bio);
 
 	OUTPUT:
-	  RETVAL
+	RETVAL
 
 SV*
 get_pem_pk(pkcs10,...)
 	pkcs10Data *pkcs10;
 
-  ALIAS:
-  write_pem_pk = 1
-  PROTOTYPE: $;$
+	ALIAS:
+	write_pem_pk = 1
+	PROTOTYPE: $;$
 
 	PREINIT:
 	BIO *bio;
 
 	CODE:
-  if((ix != 1 && items > 1) || (ix == 1 && items != 2))
-      croak("get_pem_req illegal/missing args");
-  if(items > 1) {
-     bio = sv_bio_create_file(ST(1));
-  } else {
-     bio = sv_bio_create();
-  }
+	if((ix != 1 && items > 1) || (ix == 1 && items != 2))
+		croak("get_pem_req illegal/missing args");
+	if(items > 1) {
+		bio = sv_bio_create_file(ST(1));
+	} else {
+		bio = sv_bio_create();
+	}
 
 	/* get the certificate back out in a specified format. */
 
-  if(!PEM_write_bio_PrivateKey(bio,pkcs10->pk,NULL,NULL,0,NULL,NULL))
-    croak ("%s - PEM_write_bio_X509_REQ", pkcs10->req);
+	if(!PEM_write_bio_PrivateKey(bio,pkcs10->pk,NULL,NULL,0,NULL,NULL))
+		croak ("%s - PEM_write_bio_X509_REQ", pkcs10->req);
 
 	RETVAL = sv_bio_final(bio);
 
 	OUTPUT:
-	  RETVAL
+	RETVAL
 
 int
 set_subject(pkcs10, subj_SV)
@@ -471,8 +479,8 @@ set_subject(pkcs10, subj_SV)
 	SV* subj_SV;
 
 	PREINIT:
-	  unsigned char* subj;
-	  int subj_length;
+	unsigned char* subj;
+	int subj_length;
 
 	CODE:
 	subj = SvPV(subj_SV, subj_length);
@@ -482,7 +490,7 @@ set_subject(pkcs10, subj_SV)
 		croak ("build_subject");
 
 	OUTPUT:
-	  RETVAL
+	RETVAL
 
 int
 add_ext(pkcs10, nid = NID_key_usage, ext_SV)
@@ -491,21 +499,49 @@ add_ext(pkcs10, nid = NID_key_usage, ext_SV)
 	SV* ext_SV;
 
 	PREINIT:
-	  unsigned char* ext;
-	  int ext_length;
+	unsigned char* ext;
+	int ext_length;
 
 	CODE:
 	ext = SvPV(ext_SV, ext_length);
 
-  if(!pkcs10->exts)
-    pkcs10->exts = sk_X509_EXTENSION_new_null();
+	if(!pkcs10->exts)
+		pkcs10->exts = sk_X509_EXTENSION_new_null();
 	
 	RETVAL = add_ext(pkcs10->exts, nid, ext);
 	if (!RETVAL)
 		croak ("add_ext key_usage: %d, ext: %s", nid, ext);
 
 	OUTPUT:
-	  RETVAL
+	RETVAL
+
+int
+add_custom_ext_raw(pkcs10, oid_SV, ext_SV)
+	pkcs10Data *pkcs10;
+	SV* oid_SV;
+	SV* ext_SV;
+
+	PREINIT:
+	unsigned char* oid;
+	unsigned char* ext;
+	int ext_length, nid;
+
+	CODE:
+	oid = SvPV(oid_SV, ext_length);
+	ext = SvPV(ext_SV, ext_length);
+ 
+  	if(!pkcs10->exts)
+		pkcs10->exts = sk_X509_EXTENSION_new_null();
+
+	nid = OBJ_create(oid, "MyAlias", "My Test Alias Extension");
+	RETVAL = add_ext_raw(pkcs10->exts, nid, ext, ext_length);
+
+	if (!RETVAL)
+		croak ("add_custom_ext_raw oid: %s, ext: %s", oid, ext);
+
+	OUTPUT:
+	RETVAL
+
 
 int
 add_custom_ext(pkcs10, oid_SV, ext_SV)
@@ -514,21 +550,20 @@ add_custom_ext(pkcs10, oid_SV, ext_SV)
 	SV* ext_SV;
 
 	PREINIT:
-	  unsigned char* oid;
-	  unsigned char* ext;
-	  int ext_length, nid;
+	unsigned char* oid;
+	unsigned char* ext;
+	int ext_length, nid;
 
 	CODE:
-	ext = SvPV(ext_SV, ext_length);
 	oid = SvPV(oid_SV, ext_length);
- 	/* Maybe even add our own extension based on existing */
+	ext = SvPV(ext_SV, ext_length);
 
-  if(!pkcs10->exts)
-    pkcs10->exts = sk_X509_EXTENSION_new_null();
+	if(!pkcs10->exts)
+		pkcs10->exts = sk_X509_EXTENSION_new_null();
 
-  nid = OBJ_create(oid, "MyAlias", "My Test Alias Extension");
-  X509V3_EXT_add_alias(nid, NID_netscape_comment);
-  RETVAL = add_ext(pkcs10->exts, nid, ext);
+	nid = OBJ_create(oid, "MyAlias", "My Test Alias Extension");
+	X509V3_EXT_add_alias(nid, NID_netscape_comment);
+	RETVAL = add_ext(pkcs10->exts, nid, ext);
 
 	if (!RETVAL)
 		croak ("add_custom_ext oid: %s, ext: %s", oid, ext);
@@ -541,16 +576,17 @@ add_ext_final(pkcs10)
 	pkcs10Data *pkcs10;
 
 	CODE:
-  if(pkcs10->exts) {
-    RETVAL =  X509_REQ_add_extensions(pkcs10->req, pkcs10->exts);
+	if(pkcs10->exts) {
+	RETVAL = X509_REQ_add_extensions(pkcs10->req, pkcs10->exts);
   
-	  if (!RETVAL)
-	  	croak ("X509_REQ_add_extensions");
+	if (!RETVAL)
+		croak ("X509_REQ_add_extensions");
 
-    if(pkcs10->exts)
-     sk_X509_EXTENSION_pop_free(pkcs10->exts, X509_EXTENSION_free);
-  } else {
-    RETVAL = NULL;
-  }
+	if(pkcs10->exts)
+		sk_X509_EXTENSION_pop_free(pkcs10->exts, X509_EXTENSION_free);
+	} else {
+		RETVAL = NULL;
+	}
+
 	OUTPUT:
-	  RETVAL
+	RETVAL

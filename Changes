@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::PKCS10.
 
+0.08  Thu Mar 01 21:52:00 PDT 2013
+        - Added support for raw custom extensions (thanks to Brad Davidson).
+
 0.07  Thu Sep 27 11:19:41 PDT 2012
         - Changed default hash algorithm for signing from MD5 to SHA1.
 

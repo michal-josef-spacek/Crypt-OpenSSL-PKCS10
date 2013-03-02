@@ -30,7 +30,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 	
 #);
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 require XSLoader;
 XSLoader::load('Crypt::OpenSSL::PKCS10', $VERSION);
@@ -106,9 +106,14 @@ The second one $extension is a string (for more info read C<openssl(3)>).
 
 =item add_custom_ext($oid, $desc)
 
-Adds a new custom extension to the request. 
+Adds a new custom extension to the request. The value is added as a text string, using ASN.1 encoding rules inherited from the Netscape Comment OID. 
 
   $req->add_custom_ext('1.2.3.3',"My new extension");
+
+=item add_custom_ext_raw($oid, $bytes)
+
+Adds a new custom extension to the request. The value is added as a raw DER octet string. Use this if you are packing your own ASN.1 structures and need to set the extension value directly.
+  $req->add_custom_ext_raw($oid, pack('H*','1E06006100620063')) # BMPString 'abc'
 
 =item add_ext_final()
 
