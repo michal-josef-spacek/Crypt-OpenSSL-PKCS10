@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::PKCS10.
 
+0.10  Thu Jul 19 10:51:00 PDT 2013
+        - Fixed an undefined variable in the tests (Bug #87049).
+
 0.08  Thu Mar 01 21:52:00 PDT 2013
         - Added support for raw custom extensions (thanks to Brad Davidson).
 
