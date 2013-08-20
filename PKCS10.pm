@@ -30,7 +30,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 	
 #);
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 require XSLoader;
 XSLoader::load('Crypt::OpenSSL::PKCS10', $VERSION);
@@ -83,6 +83,12 @@ Create a new Crypt::OpenSSL::PKCS10 object by using key information from a Crypt
 
   my $rsa = Crypt::OpenSSL::RSA->generate_key(512);
   my $req = Crypt::OpenSSL::PKCS10->new_from_rsa($rsa);
+
+=item new_from_file( $filename )
+
+Create a new Crypt::OpenSSL::PKCS10 object by reading the request and key information from a PEM formatted file. Here is an example:
+
+  my $req = Crypt::OpenSSL::PKCS10->new_from_file("CSR.csr");
 
 =back
 
@@ -151,6 +157,18 @@ Returns the PEM encoding of the private key.
 Writes the PEM encoding of the private key to a given file.
 
   $req->write_pem_pk('request.pem');
+
+=item subject()
+
+returns the subject of the PKCS10 request
+
+  $subject = $req->subject();
+
+=item keyinfo()
+
+returns the human readable info about the key of the PKCS10 request
+
+  $keyinfo = $req->keyinfo();
 
 =back
 

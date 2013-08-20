@@ -590,3 +590,59 @@ add_ext_final(pkcs10)
 
 	OUTPUT:
 	RETVAL
+
+SV*
+new_from_file(class, filename_SV)
+  SV* class;
+  SV* filename_SV;
+
+  PREINIT:
+  unsigned char* filename;
+  int filename_length;
+  FILE* fp;
+  X509_REQ *req;
+
+  CODE:
+  filename = SvPV(filename_SV, filename_length);
+  fp = fopen(filename, "r");
+  req = PEM_read_X509_REQ (fp, NULL, NULL, NULL);
+  fclose(fp);
+
+  RETVAL = make_pkcs10_obj(class, req, NULL, NULL, NULL);
+
+  OUTPUT:
+        RETVAL
+
+
+SV*
+accessor(pkcs10)
+  pkcs10Data *pkcs10;
+
+  ALIAS:
+  subject = 1
+  keyinfo = 2
+
+
+  PREINIT:
+  BIO *bio;
+  X509_NAME *name;
+  EVP_PKEY *key;
+
+  CODE:
+
+  bio = sv_bio_create();
+
+  if (pkcs10->req != NULL) {
+    if (ix == 1) {
+      name = X509_REQ_get_subject_name(pkcs10->req);
+      X509_NAME_print_ex(bio, name, 0, XN_FLAG_SEP_CPLUS_SPC);
+    } else if (ix == 2 ) {
+      key = X509_REQ_extract_key(pkcs10->req);
+      RSA_print(bio, EVP_PKEY_get1_RSA(key), 0);
+    }
+  }
+
+  RETVAL = sv_bio_final(bio);
+
+  OUTPUT:
+        RETVAL

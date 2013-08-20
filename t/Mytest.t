@@ -5,7 +5,7 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 BEGIN { use_ok('Crypt::OpenSSL::PKCS10') };
 
 #########################
@@ -16,6 +16,8 @@ BEGIN { use_ok('Crypt::OpenSSL::PKCS10') };
 {
 my $req = Crypt::OpenSSL::PKCS10->new();
 print STDERR $req->get_pem_req();
+print STDERR $req->subject()."\n";
+print STDERR $req->keyinfo()."\n";
 ok($req);
 }
 
@@ -25,6 +27,8 @@ use_ok('Crypt::OpenSSL::RSA');
 my $rsa = Crypt::OpenSSL::RSA->generate_key(1024);
 my $req = Crypt::OpenSSL::PKCS10->new_from_rsa($rsa);
 print STDERR $req->get_pem_req();
+print STDERR $req->subject()."\n";
+print STDERR $req->keyinfo()."\n";
 ok($req);
 }
 
@@ -39,5 +43,14 @@ $req->add_custom_ext_raw('1.2.3.4', pack('H*','1E06006100620063'));
 $req->add_ext_final();
 $req->sign();
 print STDERR $req->get_pem_req();
+print STDERR $req->subject()."\n";
+print STDERR $req->keyinfo()."\n";
+ok($req);
+}
+
+{
+my $req = Crypt::OpenSSL::PKCS10->new_from_file("t/CSR.csr");
+print STDERR $req->subject()."\n";
+print STDERR $req->keyinfo()."\n";
 ok($req);
 }

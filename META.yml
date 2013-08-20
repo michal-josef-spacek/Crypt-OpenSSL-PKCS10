@@ -1,22 +1,22 @@
----
-abstract: "Perl extension to OpenSSL's PKCS10 API."
+--- #YAML:1.0
+name:               Crypt-OpenSSL-PKCS10
+version:            0.11
+abstract:           Perl extension to OpenSSL's PKCS10 API.
 author:
-  - 'JoNO <jonozzz@yahoo.com>'
-build_requires:
-  ExtUtils::MakeMaker: 0
+    - JoNO <jonozzz@yahoo.com>
+license:            unknown
+distribution_type:  module
 configure_requires:
-  ExtUtils::MakeMaker: 0
-dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.64, CPAN::Meta::Converter version 2.120921'
-license: unknown
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
-name: Crypt-OpenSSL-PKCS10
-no_index:
-  directory:
-    - t
-    - inc
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
 requires:
-  Crypt::OpenSSL::RSA: 0
-version: 0.10
+    Crypt::OpenSSL::RSA:  0
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.57_05
+meta-spec:
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4
