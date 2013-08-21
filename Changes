@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::PKCS10.
 
+0.12  Thu Aug 20 23:40:00 PDT 2013
+        - Fixed missing test prerequisite in MANIFEST.
+
 0.11  Thu Aug 19 14:40:00 PDT 2013
         - Load CSR from PEM files. Read subject and keyinfo from a PKCS10 object. (Bug #87893 thanks to smile)
 
