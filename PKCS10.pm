@@ -30,7 +30,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 	
 #);
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 require XSLoader;
 XSLoader::load('Crypt::OpenSSL::PKCS10', $VERSION);
@@ -119,6 +119,7 @@ Adds a new custom extension to the request. The value is added as a text string,
 =item add_custom_ext_raw($oid, $bytes)
 
 Adds a new custom extension to the request. The value is added as a raw DER octet string. Use this if you are packing your own ASN.1 structures and need to set the extension value directly.
+
   $req->add_custom_ext_raw($oid, pack('H*','1E06006100620063')) # BMPString 'abc'
 
 =item add_ext_final()

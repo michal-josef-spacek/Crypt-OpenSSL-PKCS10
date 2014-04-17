@@ -38,6 +38,7 @@ $req->set_subject("/C=RO/O=UTI/OU=ssi");
 $req->add_ext(Crypt::OpenSSL::PKCS10::NID_key_usage,"critical,digitalSignature,keyEncipherment");
 $req->add_ext(Crypt::OpenSSL::PKCS10::NID_ext_key_usage,"serverAuth, nsSGC, msSGC, 1.3.4");
 $req->add_ext(Crypt::OpenSSL::PKCS10::NID_subject_alt_name,'email:steve@openssl.org');
+$req->add_ext(Crypt::OpenSSL::PKCS10::NID_subject_key_identifier, "hash");
 $req->add_custom_ext('1.2.3.3',"My new extension");
 $req->add_custom_ext_raw('1.2.3.4', pack('H*','1E06006100620063'));
 $req->add_ext_final();

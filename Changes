@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::PKCS10.
 
+0.13  Wed Apr 16 12:12:00 PDT 2014
+        - added support for NID_subject_key_identifier (Brad Davidson)
+
 0.12  Thu Aug 20 23:40:00 PDT 2013
         - Fixed missing test prerequisite in MANIFEST.
 

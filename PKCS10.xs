@@ -170,10 +170,12 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
  * because we wont reference any other sections.
  */
 
-int add_ext(STACK_OF(X509_REQUEST) *sk, int nid, char *value)
+int add_ext(STACK_OF(X509_REQUEST) *sk, X509_REQ *req, int nid, char *value)
 	{
 	X509_EXTENSION *ex;
-	ex = X509V3_EXT_conf_nid(NULL, NULL, nid, value);
+	X509V3_CTX v3ctx;
+	X509V3_set_ctx(&v3ctx, NULL, NULL, req, NULL, 0);
+	ex = X509V3_EXT_conf_nid(NULL, &v3ctx, nid, value);
 	if (!ex)
 		return 0;
 	sk_X509_EXTENSION_push(sk, ex);
@@ -309,6 +311,7 @@ BOOT:
 	{"NID_netscape_cert_type", NID_netscape_cert_type},
 	{"NID_netscape_comment", NID_netscape_comment},
 	{"NID_ext_key_usage", NID_ext_key_usage},
+	{"NID_subject_key_identifier", NID_subject_key_identifier},
 	{Nullch,0}};
 
 	char *name;
@@ -508,7 +511,7 @@ add_ext(pkcs10, nid = NID_key_usage, ext_SV)
 	if(!pkcs10->exts)
 		pkcs10->exts = sk_X509_EXTENSION_new_null();
 	
-	RETVAL = add_ext(pkcs10->exts, nid, ext);
+	RETVAL = add_ext(pkcs10->exts, pkcs10->req, nid, ext);
 	if (!RETVAL)
 		croak ("add_ext key_usage: %d, ext: %s", nid, ext);
 
@@ -563,7 +566,7 @@ add_custom_ext(pkcs10, oid_SV, ext_SV)
 
 	nid = OBJ_create(oid, "MyAlias", "My Test Alias Extension");
 	X509V3_EXT_add_alias(nid, NID_netscape_comment);
-	RETVAL = add_ext(pkcs10->exts, nid, ext);
+	RETVAL = add_ext(pkcs10->exts, pkcs10->req, nid, ext);
 
 	if (!RETVAL)
 		croak ("add_custom_ext oid: %s, ext: %s", oid, ext);
