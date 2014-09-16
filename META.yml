@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Crypt-OpenSSL-PKCS10
-version:            0.13
+version:            0.14
 abstract:           Perl extension to OpenSSL's PKCS10 API.
 author:
     - JoNO <jonozzz@yahoo.com>

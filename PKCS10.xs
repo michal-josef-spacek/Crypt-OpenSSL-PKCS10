@@ -409,7 +409,7 @@ sign(pkcs10)
 
 	CODE:
 
-	RETVAL = X509_REQ_sign(pkcs10->req,pkcs10->pk,EVP_sha1());
+	RETVAL = X509_REQ_sign(pkcs10->req,pkcs10->pk,EVP_sha256());
 	if (!RETVAL)
 		croak ("X509_REQ_sign");
 
