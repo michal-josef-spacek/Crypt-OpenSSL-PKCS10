@@ -19,7 +19,7 @@ our @NIDS = qw(
 	NID_ext_key_usage
 );
 
-our %EXPORT_TAGS = ( 
+our %EXPORT_TAGS = (
   'all'   => [ @NIDS ],
   'const' => [ @NIDS ],
 );

@@ -33,7 +33,7 @@ typedef struct
     RSA* rsa;
     int padding;
     int hashMode;
-} Crypt__OpenSSL__RSA; 
+} Crypt__OpenSSL__RSA;
 
 #define PACKAGE_NAME "Crypt::OpenSSL::PKCS10"
 #define PACKAGE_CROAK(p_message) croak("%s:%d: %s", (p_message))
@@ -43,7 +43,7 @@ typedef struct
 
 //int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int length);
 //int add_ext(STACK_OF(X509_REQUEST) *sk, int nid, char *value);
-X509_NAME *parse_name(char *str, long chtype, int multirdn); 
+X509_NAME *parse_name(char *str, long chtype, int multirdn);
 
 /*
  * subject is expected to be in the format /type0=value0/type1=value1/type2=...
@@ -67,7 +67,7 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 		{
 		croak("malloc error\n");
 		goto error;
-		}	
+		}
 
 	if (*subject != '/')
 		{
@@ -89,12 +89,12 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 				{
 				if (*++sp)
 					*bp++ = *sp++;
-				else	
+				else
 					{
 					croak("escape character at end of string\n");
 					goto error;
 					}
-				}	
+				}
 			else if (*sp == '=')
 				{
 				sp++;
@@ -340,10 +340,10 @@ new(class, keylen = 1024)
 	X509_REQ *x;
 	EVP_PKEY *pk;
 	RSA *rsa = NULL;
-	
+
 	CODE:
 	//CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
-	
+
 	if ((pk=EVP_PKEY_new()) == NULL)
 		croak ("%s - can't create PKEY", class);
 
@@ -353,14 +353,14 @@ new(class, keylen = 1024)
 	rsa=RSA_generate_key(keylen, RSA_F4, NULL, NULL);
 	if (!EVP_PKEY_assign_RSA(pk,rsa))
 		croak ("%s - EVP_PKEY_assign_RSA", class);
-	
+
 	X509_REQ_set_pubkey(x,pk);
 	X509_REQ_set_version(x,0L);
 	if (!X509_REQ_sign(x,pk,EVP_sha256()))
 		croak ("%s - X509_REQ_sign", class);
-	
+
 	RETVAL = make_pkcs10_obj(class, x, pk, NULL, NULL);
-  
+
 	OUTPUT:
         RETVAL
 
@@ -370,7 +370,7 @@ DESTROY(pkcs10)
 
 	PREINIT:
 	//BIO *bio_err;
-	
+
 	PPCODE:
 	//bio_err=BIO_new_fp(stderr, BIO_NOCLOSE);
 	if (pkcs10->pk)   EVP_PKEY_free(pkcs10->pk); pkcs10->pk = 0;
@@ -390,10 +390,10 @@ new_from_rsa(class, p_rsa)
 	Crypt__OpenSSL__RSA	*rsa;
 	X509_REQ *x;
 	EVP_PKEY *pk;
-	
+
 	CODE:
 	//CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
-	
+
 	if ((pk=EVP_PKEY_new()) == NULL)
 		croak ("%s - can't create PKEY", class);
 
@@ -403,12 +403,12 @@ new_from_rsa(class, p_rsa)
 	rsa = (Crypt__OpenSSL__RSA	*) SvIV(SvRV(p_rsa));
 	if (!EVP_PKEY_assign_RSA(pk,rsa->rsa))
 		croak ("%s - EVP_PKEY_assign_RSA", class);
-	
+
 	X509_REQ_set_pubkey(x,pk);
 	X509_REQ_set_version(x,0L);
 	if (!X509_REQ_sign(x,pk,EVP_sha256()))
 		croak ("%s - X509_REQ_sign", class);
-	
+
 	RETVAL = make_pkcs10_obj(class, x, pk, NULL, &rsa->rsa);
 
 	OUTPUT:
@@ -509,7 +509,7 @@ pubkey_type(pkcs10)
 SV*
 get_pem_req(pkcs10,...)
 	pkcs10Data *pkcs10;
-  
+
 	ALIAS:
 	write_pem_req = 1
 	PROTOTYPE: $;$
@@ -601,7 +601,7 @@ add_ext(pkcs10, nid = NID_key_usage, ext_SV)
 
 	if(!pkcs10->exts)
 		pkcs10->exts = sk_X509_EXTENSION_new_null();
-	
+
 	RETVAL = add_ext(pkcs10->exts, pkcs10->req, nid, ext);
 	if (!RETVAL)
 		croak ("add_ext key_usage: %d, ext: %s", nid, ext);
@@ -623,7 +623,7 @@ add_custom_ext_raw(pkcs10, oid_SV, ext_SV)
 	CODE:
 	oid = SvPV(oid_SV, ext_length);
 	ext = SvPV(ext_SV, ext_length);
- 
+
   	if(!pkcs10->exts)
 		pkcs10->exts = sk_X509_EXTENSION_new_null();
 
@@ -674,7 +674,7 @@ add_ext_final(pkcs10)
 	CODE:
 	if(pkcs10->exts) {
 	RETVAL = X509_REQ_add_extensions(pkcs10->req, pkcs10->exts);
-  
+
 	if (!RETVAL)
 		croak ("X509_REQ_add_extensions");
 
