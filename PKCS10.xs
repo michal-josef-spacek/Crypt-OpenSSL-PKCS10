@@ -22,24 +22,24 @@
 
 typedef struct
 {
-    X509_REQ* req;
-    EVP_PKEY *pk;
-    RSA **rsa;
-    STACK_OF(X509_EXTENSION) *exts;
+	X509_REQ* req;
+	EVP_PKEY *pk;
+	RSA **rsa;
+	STACK_OF(X509_EXTENSION) *exts;
 } pkcs10Data;
 
 typedef struct
 {
-    RSA* rsa;
-    int padding;
-    int hashMode;
+	RSA* rsa;
+	int padding;
+	int hashMode;
 } Crypt__OpenSSL__RSA;
 
 #define PACKAGE_NAME "Crypt::OpenSSL::PKCS10"
 #define PACKAGE_CROAK(p_message) croak("%s:%d: %s", (p_message))
 #define CHECK_NEW(p_var, p_size, p_type) \
-  if (New(0, p_var, p_size, p_type) == NULL) \
-    { PACKAGE_CROAK("unable to alloc buffer"); }
+	if (New(0, p_var, p_size, p_type) == NULL) \
+		{ PACKAGE_CROAK("unable to alloc buffer"); }
 
 //int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int length);
 //int add_ext(STACK_OF(X509_REQUEST) *sk, int nid, char *value);
@@ -50,7 +50,7 @@ X509_NAME *parse_name(char *str, long chtype, int multirdn);
  * where characters may be escaped by \
  */
 X509_NAME *parse_name(char *subject, long chtype, int multirdn)
-	{
+{
 	size_t buflen = strlen(subject)+1; /* to copy the types and values into. due to escaping, the copy can only become shorter */
 	char *buf = OPENSSL_malloc(buflen);
 	size_t max_ne = buflen / 2 + 1; /* maximum number of name elements */
@@ -63,100 +63,82 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 
 	X509_NAME *n = NULL;
 
-	if (!buf || !ne_types || !ne_values)
-		{
+	if (!buf || !ne_types || !ne_values) {
 		croak("malloc error\n");
 		goto error;
-		}
+	}
 
-	if (*subject != '/')
-		{
+	if (*subject != '/') {
 		croak("Subject does not start with '/'.\n");
 		goto error;
-		}
+	}
 	sp++; /* skip leading / */
 
 	/* no multivalued RDN by default */
 	mval[ne_num] = 0;
 
-	while (*sp)
-		{
+	while (*sp) {
 		/* collect type */
 		ne_types[ne_num] = bp;
-		while (*sp)
-			{
-			if (*sp == '\\') /* is there anything to escape in the type...? */
-				{
+		while (*sp) {
+
+			/* is there anything to escape in the type...? */
+			if (*sp == '\\') {
 				if (*++sp)
 					*bp++ = *sp++;
-				else
-					{
+				else {
 					croak("escape character at end of string\n");
 					goto error;
-					}
 				}
-			else if (*sp == '=')
-				{
+			} else if (*sp == '=') {
 				sp++;
 				*bp++ = '\0';
 				break;
-				}
-			else
+			} else
 				*bp++ = *sp++;
-			}
-		if (!*sp)
-			{
+		}
+		if (!*sp) {
 			croak("end of string encountered while processing type of subject name element #%d\n", ne_num);
 			goto error;
-			}
+		}
 		ne_values[ne_num] = bp;
-		while (*sp)
-			{
-			if (*sp == '\\')
-				{
+		while (*sp) {
+			if (*sp == '\\') {
 				if (*++sp)
 					*bp++ = *sp++;
-				else
-					{
+				else {
 					croak("escape character at end of string\n");
 					goto error;
-					}
 				}
-			else if (*sp == '/')
-				{
+			} else if (*sp == '/') {
 				sp++;
 				/* no multivalued RDN by default */
 				mval[ne_num+1] = 0;
 				break;
-				}
-			else if (*sp == '+' && multirdn)
-				{
+			} else if (*sp == '+' && multirdn) {
 				/* a not escaped + signals a mutlivalued RDN */
 				sp++;
 				mval[ne_num+1] = -1;
 				break;
-				}
-			else
+			} else
 				*bp++ = *sp++;
-			}
+		}
 		*bp++ = '\0';
 		ne_num++;
-		}
+	}
 
 	if (!(n = X509_NAME_new()))
 		goto error;
 
-	for (i = 0; i < ne_num; i++)
-		{
-		if (!*ne_values[i])
-			{
+	for (i = 0; i < ne_num; i++) {
+		if (!*ne_values[i]) {
 			croak("No value provided for Subject Attribute %s, skipped\n", ne_types[i]);
 			continue;
-			}
+		}
 
 		if (!X509_NAME_add_entry_by_txt(n, (unsigned char*)ne_types[i], chtype, (unsigned char*)ne_values[i], -1,-1,mval[i]))
 			goto error;
-		}
+	}
 
 	OPENSSL_free(mval);
 	OPENSSL_free(ne_values);
@@ -178,9 +160,8 @@ X509_NAME *parse_name(char *subject, long chtype, int multirdn)
 /* Add extension using V3 code: we can set the config file as NULL
  * because we wont reference any other sections.
  */
-
 int add_ext(STACK_OF(X509_REQUEST) *sk, X509_REQ *req, int nid, char *value)
-	{
+{
 	X509_EXTENSION *ex;
 	X509V3_CTX v3ctx;
 	X509V3_set_ctx(&v3ctx, NULL, NULL, req, NULL, 0);
@@ -190,12 +171,12 @@ int add_ext(STACK_OF(X509_REQUEST) *sk, X509_REQ *req, int nid, char *value)
 	sk_X509_EXTENSION_push(sk, ex);
 
 	return 1;
-	}
+}
 
 /*  Add an extention by setting the raw ASN1 octet string.
  */
 int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int length)
-	{
+{
 	X509_EXTENSION *ex;
 	ASN1_STRING *asn;
 
@@ -208,8 +189,7 @@ int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int l
 	sk_X509_EXTENSION_push(sk, ex);
 
 	return 1;
-	}
-
+}
 
 SV* make_pkcs10_obj(SV* p_proto, X509_REQ* p_req, EVP_PKEY* p_pk, STACK_OF(X509_EXTENSION)* p_exts, RSA **p_rsa)
 {
@@ -227,44 +207,44 @@ SV* make_pkcs10_obj(SV* p_proto, X509_REQ* p_req, EVP_PKEY* p_pk, STACK_OF(X509_
 }
 
 /* stolen from OpenSSL.xs */
-long bio_write_cb(struct bio_st *bm, int m, const char *ptr, int l, long x, long y) {
+long bio_write_cb(struct bio_st *bm, int m, const char *ptr, int l, long x, long y)
+{
+	if (m == BIO_CB_WRITE) {
+		SV *sv = (SV *) BIO_get_callback_arg(bm);
+		sv_catpvn(sv, ptr, l);
+	}
 
-        if (m == BIO_CB_WRITE) {
-                SV *sv = (SV *) BIO_get_callback_arg(bm);
-                sv_catpvn(sv, ptr, l);
-        }
+	if (m == BIO_CB_PUTS) {
+		SV *sv = (SV *) BIO_get_callback_arg(bm);
+		l = strlen(ptr);
+		sv_catpvn(sv, ptr, l);
+	}
 
-        if (m == BIO_CB_PUTS) {
-                SV *sv = (SV *) BIO_get_callback_arg(bm);
-                l = strlen(ptr);
-                sv_catpvn(sv, ptr, l);
-        }
-
-        return l;
+	return l;
 }
 
-static BIO* sv_bio_create(void) {
-
-        SV *sv = newSVpvn("",0);
+static BIO* sv_bio_create(void)
+{
+	SV *sv = newSVpvn("", 0);
 
 	/* create an in-memory BIO abstraction and callbacks */
-        BIO *bio = BIO_new(BIO_s_mem());
+	BIO *bio = BIO_new(BIO_s_mem());
 
-        BIO_set_callback(bio, bio_write_cb);
-        BIO_set_callback_arg(bio, (void *)sv);
+	BIO_set_callback(bio, bio_write_cb);
+	BIO_set_callback_arg(bio, (void *)sv);
 
-        return bio;
+	return bio;
 }
 
 static BIO *sv_bio_create_file(SV *filename)
 {
-        STRLEN l;
+	STRLEN l;
 
-        return BIO_new_file(SvPV(filename, l), "wb");
+	return BIO_new_file(SvPV(filename, l), "wb");
 }
 
-static SV* sv_bio_final(BIO *bio) {
-
+static SV* sv_bio_final(BIO *bio)
+{
 	SV* sv;
 
 	BIO_flush(bio);
@@ -281,17 +261,16 @@ static SV* sv_bio_final(BIO *bio) {
  * where characters may be escaped by \
  */
 static int build_subject(X509_REQ *req, char *subject, unsigned long chtype, int multirdn)
-	{
+{
 	X509_NAME *n;
 
 	if (!(n = parse_name(subject, chtype, multirdn)))
 		return 0;
 
-	if (!X509_REQ_set_subject_name(req, n))
-		{
+	if (!X509_REQ_set_subject_name(req, n)) {
 		X509_NAME_free(n);
 		return 0;
-		}
+	}
 	X509_NAME_free(n);
 	return 1;
 }
@@ -303,25 +282,25 @@ PROTOTYPES: DISABLE
 BOOT:
 {
 	/*OpenSSL_add_all_algorithms();
-        OpenSSL_add_all_ciphers();
-        OpenSSL_add_all_digests();
+	OpenSSL_add_all_ciphers();
+	OpenSSL_add_all_digests();
 	ERR_load_PEM_strings();
-        ERR_load_ASN1_strings();
-        ERR_load_crypto_strings();
-        ERR_load_X509_strings();
-        ERR_load_DSA_strings();
-        ERR_load_RSA_strings();*/
+	ERR_load_ASN1_strings();
+	ERR_load_crypto_strings();
+	ERR_load_X509_strings();
+	ERR_load_DSA_strings();
+	ERR_load_RSA_strings();*/
 	HV *stash = gv_stashpvn("Crypt::OpenSSL::PKCS10", 22, TRUE);
 
 	struct { char *n; I32 v; } Crypt__OpenSSL__PKCS10__const[] = {
-
-	{"NID_key_usage", NID_key_usage},
-	{"NID_subject_alt_name", NID_subject_alt_name},
-	{"NID_netscape_cert_type", NID_netscape_cert_type},
-	{"NID_netscape_comment", NID_netscape_comment},
-	{"NID_ext_key_usage", NID_ext_key_usage},
-	{"NID_subject_key_identifier", NID_subject_key_identifier},
-	{Nullch,0}};
+		{"NID_key_usage", NID_key_usage},
+		{"NID_subject_alt_name", NID_subject_alt_name},
+		{"NID_netscape_cert_type", NID_netscape_cert_type},
+		{"NID_netscape_comment", NID_netscape_comment},
+		{"NID_ext_key_usage", NID_ext_key_usage},
+		{"NID_subject_key_identifier", NID_subject_key_identifier},
+		{Nullch,0}
+	};
 
 	char *name;
 	int i;
@@ -362,7 +341,7 @@ new(class, keylen = 1024)
 	RETVAL = make_pkcs10_obj(class, x, pk, NULL, NULL);
 
 	OUTPUT:
-        RETVAL
+	RETVAL
 
 void
 DESTROY(pkcs10)
@@ -412,7 +391,7 @@ new_from_rsa(class, p_rsa)
 	RETVAL = make_pkcs10_obj(class, x, pk, NULL, &rsa->rsa);
 
 	OUTPUT:
-        RETVAL
+	RETVAL
 
 int
 sign(pkcs10)
@@ -480,31 +459,31 @@ char*
 pubkey_type(pkcs10)
 	pkcs10Data *pkcs10;
 
-    PREINIT:
-        EVP_PKEY *pkey;
+	PREINIT:
+	EVP_PKEY *pkey;
 	int type;
 
-    CODE:
-        RETVAL=NULL;
-        pkey = X509_REQ_get_pubkey(pkcs10->req);
+	CODE:
+	RETVAL=NULL;
+	pkey = X509_REQ_get_pubkey(pkcs10->req);
 
-        if(!pkey)
-            XSRETURN_UNDEF;
+	if(!pkey)
+		XSRETURN_UNDEF;
 
-        type = EVP_PKEY_base_id(pkey);
-        if (type == EVP_PKEY_DSA) {
-            RETVAL="dsa";
+	type = EVP_PKEY_base_id(pkey);
+	if (type == EVP_PKEY_DSA) {
+		RETVAL="dsa";
 
-        } else if (type == EVP_PKEY_RSA) {
-            RETVAL="rsa";
+	} else if (type == EVP_PKEY_RSA) {
+		RETVAL="rsa";
 #ifndef OPENSSL_NO_EC
-        } else if ( type == EVP_PKEY_EC ) {
-            RETVAL="ec";
+	} else if ( type == EVP_PKEY_EC ) {
+		RETVAL="ec";
 #endif
-        }
+	}
 
-    OUTPUT:
-    RETVAL
+	OUTPUT:
+	RETVAL
 
 SV*
 get_pem_req(pkcs10,...)
@@ -527,7 +506,6 @@ get_pem_req(pkcs10,...)
 	}
 
 	/* get the certificate back out in a specified format. */
-
 	if(!PEM_write_bio_X509_REQ(bio,pkcs10->req))
 		croak ("PEM_write_bio_X509_REQ");
 
@@ -557,7 +535,6 @@ get_pem_pk(pkcs10,...)
 	}
 
 	/* get the certificate back out in a specified format. */
-
 	if(!PEM_write_bio_PrivateKey(bio,pkcs10->pk,NULL,NULL,0,NULL,NULL))
 		croak ("%s - PEM_write_bio_X509_REQ", pkcs10->req);
 
@@ -624,11 +601,11 @@ add_custom_ext_raw(pkcs10, oid_SV, ext_SV)
 	oid = SvPV(oid_SV, ext_length);
 	ext = SvPV(ext_SV, ext_length);
 
-  	if(!pkcs10->exts)
+	if(!pkcs10->exts)
 		pkcs10->exts = sk_X509_EXTENSION_new_null();
 
 	if ((nid = OBJ_create(oid, oid, oid)) == NID_undef)
-        croak ("add_custom_ext_raw: OBJ_create() for OID %s failed", oid);
+		croak ("add_custom_ext_raw: OBJ_create() for OID %s failed", oid);
 	RETVAL = add_ext_raw(pkcs10->exts, nid, ext, ext_length);
 
 	if (!RETVAL)
@@ -636,7 +613,6 @@ add_custom_ext_raw(pkcs10, oid_SV, ext_SV)
 
 	OUTPUT:
 	RETVAL
-
 
 int
 add_custom_ext(pkcs10, oid_SV, ext_SV)
@@ -657,7 +633,7 @@ add_custom_ext(pkcs10, oid_SV, ext_SV)
 		pkcs10->exts = sk_X509_EXTENSION_new_null();
 
 	if ((nid = OBJ_create(oid, oid, oid)) == NID_undef)
-        croak ("add_custom_ext_raw: OBJ_create() for OID %s failed", oid);
+		croak ("add_custom_ext_raw: OBJ_create() for OID %s failed", oid);
 	X509V3_EXT_add_alias(nid, NID_netscape_comment);
 	RETVAL = add_ext(pkcs10->exts, pkcs10->req, nid, ext);
 
@@ -665,7 +641,7 @@ add_custom_ext(pkcs10, oid_SV, ext_SV)
 		croak ("add_custom_ext oid: %s, ext: %s", oid, ext);
 
 	OUTPUT:
-	  RETVAL
+	RETVAL
 
 int
 add_ext_final(pkcs10)
@@ -673,13 +649,13 @@ add_ext_final(pkcs10)
 
 	CODE:
 	if(pkcs10->exts) {
-	RETVAL = X509_REQ_add_extensions(pkcs10->req, pkcs10->exts);
+		RETVAL = X509_REQ_add_extensions(pkcs10->req, pkcs10->exts);
 
-	if (!RETVAL)
-		croak ("X509_REQ_add_extensions");
+		if (!RETVAL)
+			croak ("X509_REQ_add_extensions");
 
-	if(pkcs10->exts)
-		sk_X509_EXTENSION_pop_free(pkcs10->exts, X509_EXTENSION_free);
+		if(pkcs10->exts)
+			sk_X509_EXTENSION_pop_free(pkcs10->exts, X509_EXTENSION_free);
 	} else {
 		RETVAL = NULL;
 	}
@@ -689,56 +665,53 @@ add_ext_final(pkcs10)
 
 SV*
 new_from_file(class, filename_SV)
-  SV* class;
-  SV* filename_SV;
+	SV* class;
+	SV* filename_SV;
 
-  PREINIT:
-  unsigned char* filename;
-  int filename_length;
-  FILE* fp;
-  X509_REQ *req;
+	PREINIT:
+	unsigned char* filename;
+	int filename_length;
+	FILE* fp;
+	X509_REQ *req;
 
-  CODE:
-  filename = SvPV(filename_SV, filename_length);
-  fp = fopen(filename, "r");
-  req = PEM_read_X509_REQ (fp, NULL, NULL, NULL);
-  fclose(fp);
+	CODE:
+	filename = SvPV(filename_SV, filename_length);
+	fp = fopen(filename, "r");
+	req = PEM_read_X509_REQ (fp, NULL, NULL, NULL);
+	fclose(fp);
 
-  RETVAL = make_pkcs10_obj(class, req, NULL, NULL, NULL);
+	RETVAL = make_pkcs10_obj(class, req, NULL, NULL, NULL);
 
-  OUTPUT:
-        RETVAL
-
+	OUTPUT:
+	RETVAL
 
 SV*
 accessor(pkcs10)
-  pkcs10Data *pkcs10;
+	pkcs10Data *pkcs10;
 
-  ALIAS:
-  subject = 1
-  keyinfo = 2
+	ALIAS:
+	subject = 1
+	keyinfo = 2
 
+	PREINIT:
+	BIO *bio;
+	X509_NAME *name;
+	EVP_PKEY *key;
 
-  PREINIT:
-  BIO *bio;
-  X509_NAME *name;
-  EVP_PKEY *key;
+	CODE:
+	bio = sv_bio_create();
 
-  CODE:
+	if (pkcs10->req != NULL) {
+		if (ix == 1) {
+			name = X509_REQ_get_subject_name(pkcs10->req);
+			X509_NAME_print_ex(bio, name, 0, XN_FLAG_SEP_CPLUS_SPC);
+		} else if (ix == 2 ) {
+			key = X509_REQ_extract_key(pkcs10->req);
+			RSA_print(bio, EVP_PKEY_get1_RSA(key), 0);
+		}
+	}
 
-  bio = sv_bio_create();
+	RETVAL = sv_bio_final(bio);
 
-  if (pkcs10->req != NULL) {
-    if (ix == 1) {
-      name = X509_REQ_get_subject_name(pkcs10->req);
-      X509_NAME_print_ex(bio, name, 0, XN_FLAG_SEP_CPLUS_SPC);
-    } else if (ix == 2 ) {
-      key = X509_REQ_extract_key(pkcs10->req);
-      RSA_print(bio, EVP_PKEY_get1_RSA(key), 0);
-    }
-  }
-
-  RETVAL = sv_bio_final(bio);
-
-  OUTPUT:
-        RETVAL
+	OUTPUT:
+	RETVAL
