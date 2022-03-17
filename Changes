@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::PKCS10.
 
+0.19
+        - Remove executable flag of files in dist
+
 0.18  Thu Mar 10 17:31:59 PST 2022
         - Improve Makefile.PL to detect LIBS and INC values automatically (thanks Michal Josef �pacek)
         - Fix failing tests with OpenSSL 3 (Petr Pisar)
