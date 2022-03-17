@@ -1,5 +1,8 @@
 Revision history for Perl extension Crypt::OpenSSL::PKCS10.
 
+0.16  Mon Oct 17 09:36:48 PDT 2016
+        - OpenSSL 1.1.0 support (thanks Petr Písar)
+
 0.15  Fri Aug  7 23:12:46 PDT 2015
         - UTF-8 subject support. (Adam Osuchowski)
         - get_pubkey() Returns the PEM encoding of the PKCS10 public key. (David Dick)

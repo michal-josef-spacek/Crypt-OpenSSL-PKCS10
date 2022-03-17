@@ -5,11 +5,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <openssl/asn1.h>
 #include <openssl/pem.h>
 #include <openssl/x509v3.h>
 #include <openssl/err.h>
 
 #include "ppport.h"
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#define EVP_PKEY_get0_RSA(pkey) ((pkey)->pkey.rsa)
+#define EVP_PKEY_get0_DSA(pkey) ((pkey)->pkey.dsa)
+#ifndef OPENSSL_NO_EC
+#define EVP_PKEY_get0_EC_KEY(pkey) ((pkey)->pkey.ec)
+#endif
+#endif
 
 typedef struct
 {
@@ -190,7 +199,7 @@ int add_ext_raw(STACK_OF(X509_REQUEST) *sk, int nid, unsigned char *value, int l
 	X509_EXTENSION *ex;
 	ASN1_STRING *asn;
 
-	asn = M_ASN1_OCTET_STRING_new();
+	asn = ASN1_STRING_type_new(V_ASN1_OCTET_STRING);
 	ASN1_OCTET_STRING_set(asn, value, length);
 
 	ex = X509_EXTENSION_create_by_NID(NULL, nid, 0, asn);
@@ -423,6 +432,7 @@ get_pem_pubkey(pkcs10)
 	PREINIT:
 	EVP_PKEY *pkey;
 	BIO *bio;
+	int type;
 
 	CODE:
 
@@ -436,17 +446,18 @@ get_pem_pubkey(pkcs10)
 		croak("Public Key is unavailable\n");
 	}
 
-	if (pkey->type == EVP_PKEY_RSA) {
+	type = EVP_PKEY_base_id(pkey);
+	if (type == EVP_PKEY_RSA) {
 
-#		PEM_write_bio_RSAPublicKey(bio, pkey->pkey.rsa);
-		PEM_write_bio_RSA_PUBKEY(bio, pkey->pkey.rsa);
+#		PEM_write_bio_RSAPublicKey(bio, EVP_PKEY_get0_RSA(pkey));
+		PEM_write_bio_RSA_PUBKEY(bio, EVP_PKEY_get0_RSA(pkey));
 
-	} else if (pkey->type == EVP_PKEY_DSA) {
+	} else if (type == EVP_PKEY_DSA) {
 
-		PEM_write_bio_DSA_PUBKEY(bio, pkey->pkey.dsa);
+		PEM_write_bio_DSA_PUBKEY(bio, EVP_PKEY_get0_DSA(pkey));
 #ifndef OPENSSL_NO_EC
-	} else if ( pkey->type == EVP_PKEY_EC ) {
-		PEM_write_bio_EC_PUBKEY(bio, pkey->pkey.ec);
+	} else if ( type == EVP_PKEY_EC ) {
+		PEM_write_bio_EC_PUBKEY(bio, EVP_PKEY_get0_EC_KEY(pkey));
 #endif
 	} else {
 
@@ -467,6 +478,7 @@ pubkey_type(pkcs10)
 
     PREINIT:
         EVP_PKEY *pkey;
+	int type;
 
     CODE:
         RETVAL=NULL;
@@ -475,13 +487,14 @@ pubkey_type(pkcs10)
         if(!pkey)
             XSRETURN_UNDEF;
 
-        if (pkey->type == EVP_PKEY_DSA) {
+        type = EVP_PKEY_base_id(pkey);
+        if (type == EVP_PKEY_DSA) {
             RETVAL="dsa";
 
-        } else if (pkey->type == EVP_PKEY_RSA) {
+        } else if (type == EVP_PKEY_RSA) {
             RETVAL="rsa";
 #ifndef OPENSSL_NO_EC
-        } else if ( pkey->type == EVP_PKEY_EC ) {
+        } else if ( type == EVP_PKEY_EC ) {
             RETVAL="ec";
 #endif
         }
