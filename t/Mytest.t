@@ -29,6 +29,8 @@ my $req = Crypt::OpenSSL::PKCS10->new_from_rsa($rsa);
 print STDERR $req->get_pem_req();
 print STDERR $req->subject()."\n";
 print STDERR $req->keyinfo()."\n";
+print STDERR $req->pubkey_type()."\n";
+print STDERR $req->get_pem_pubkey()."\n";
 ok($req);
 }
 
@@ -46,6 +48,8 @@ $req->sign();
 print STDERR $req->get_pem_req();
 print STDERR $req->subject()."\n";
 print STDERR $req->keyinfo()."\n";
+print STDERR $req->pubkey_type()."\n";
+print STDERR $req->get_pem_pubkey()."\n";
 ok($req);
 }
 
@@ -53,5 +57,7 @@ ok($req);
 my $req = Crypt::OpenSSL::PKCS10->new_from_file("t/CSR.csr");
 print STDERR $req->subject()."\n";
 print STDERR $req->keyinfo()."\n";
+print STDERR $req->pubkey_type()."\n";
+print STDERR $req->get_pem_pubkey()."\n";
 ok($req);
 }

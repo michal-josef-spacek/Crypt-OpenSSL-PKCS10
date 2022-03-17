@@ -417,6 +417,79 @@ sign(pkcs10)
 	RETVAL
 
 SV*
+get_pem_pubkey(pkcs10)
+	pkcs10Data *pkcs10;
+
+	PREINIT:
+	EVP_PKEY *pkey;
+	BIO *bio;
+
+	CODE:
+
+	pkey = X509_REQ_get_pubkey(pkcs10->req);
+	bio  = sv_bio_create();
+
+	if (pkey == NULL) {
+
+		BIO_free_all(bio);
+		EVP_PKEY_free(pkey);
+		croak("Public Key is unavailable\n");
+	}
+
+	if (pkey->type == EVP_PKEY_RSA) {
+
+#		PEM_write_bio_RSAPublicKey(bio, pkey->pkey.rsa);
+		PEM_write_bio_RSA_PUBKEY(bio, pkey->pkey.rsa);
+
+	} else if (pkey->type == EVP_PKEY_DSA) {
+
+		PEM_write_bio_DSA_PUBKEY(bio, pkey->pkey.dsa);
+#ifndef OPENSSL_NO_EC
+	} else if ( pkey->type == EVP_PKEY_EC ) {
+		PEM_write_bio_EC_PUBKEY(bio, pkey->pkey.ec);
+#endif
+	} else {
+
+		BIO_free_all(bio);
+		EVP_PKEY_free(pkey);
+		croak("Wrong Algorithm type\n");
+	}
+	EVP_PKEY_free(pkey);
+
+	RETVAL = sv_bio_final(bio);
+
+	OUTPUT:
+	RETVAL
+
+char*
+pubkey_type(pkcs10)
+	pkcs10Data *pkcs10;
+
+    PREINIT:
+        EVP_PKEY *pkey;
+
+    CODE:
+        RETVAL=NULL;
+        pkey = X509_REQ_get_pubkey(pkcs10->req);
+
+        if(!pkey)
+            XSRETURN_UNDEF;
+
+        if (pkey->type == EVP_PKEY_DSA) {
+            RETVAL="dsa";
+
+        } else if (pkey->type == EVP_PKEY_RSA) {
+            RETVAL="rsa";
+#ifndef OPENSSL_NO_EC
+        } else if ( pkey->type == EVP_PKEY_EC ) {
+            RETVAL="ec";
+#endif
+        }
+
+    OUTPUT:
+    RETVAL
+
+SV*
 get_pem_req(pkcs10,...)
 	pkcs10Data *pkcs10;
   
@@ -477,9 +550,10 @@ get_pem_pk(pkcs10,...)
 	RETVAL
 
 int
-set_subject(pkcs10, subj_SV)
+set_subject(pkcs10, subj_SV, utf8 = 0)
 	pkcs10Data *pkcs10;
 	SV* subj_SV;
+	int utf8;
 
 	PREINIT:
 	unsigned char* subj;
@@ -488,7 +562,7 @@ set_subject(pkcs10, subj_SV)
 	CODE:
 	subj = SvPV(subj_SV, subj_length);
 
-	RETVAL = build_subject(pkcs10->req, subj, MBSTRING_ASC, 0);
+	RETVAL = build_subject(pkcs10->req, subj, utf8 ? MBSTRING_UTF8 : MBSTRING_ASC, 0);
 	if (!RETVAL)
 		croak ("build_subject");
 

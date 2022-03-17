@@ -30,7 +30,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 	
 #);
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 require XSLoader;
 XSLoader::load('Crypt::OpenSSL::PKCS10', $VERSION);
@@ -58,6 +58,8 @@ Crypt::OpenSSL::PKCS10 - Perl extension to OpenSSL's PKCS10 API.
   $req->sign();
   $req->write_pem_req('request.pem');
   $req->write_pem_pk('pk.pem');
+  print $req->get_pem_pubkey();
+  print $req->pubkey_type();
   print $req->get_pem_req();
 
 =head1 ABSTRACT
@@ -96,10 +98,11 @@ Create a new Crypt::OpenSSL::PKCS10 object by reading the request and key inform
 
 =over 2
 
-=item set_subject($subject)
+=item set_subject($subject, [ $utf8 ])
 
 Sets the subject DN of the request.
-Note: $subject is expected to be in the format /type0=value0/type1=value1/type2=... where characters may be escaped by \
+Note: $subject is expected to be in the format /type0=value0/type1=value1/type2=... where characters may be escaped by \.
+If $utf8 is non-zero integer, $subject is interpreted as UTF-8 string.
 
 =item add_ext($nid, $extension)
 
@@ -134,6 +137,18 @@ This must be called after all extensions has been added. It actually copies the 
 This adds the signature to the PKCS10 request.
 
   $req->sign();
+
+=item pubkey_type()
+
+Returns the type of the PKCS10 public key - one of (rsa|dsa|ec).
+
+  $req->pubkey_type();
+
+=item get_pubkey()
+
+Returns the PEM encoding of the PKCS10 public key.
+
+  $req->get_pubkey();
 
 =item get_pem_req()
 
