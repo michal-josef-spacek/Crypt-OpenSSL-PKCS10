@@ -536,7 +536,7 @@ get_pem_pk(pkcs10,...)
 
 	/* get the certificate back out in a specified format. */
 	if(!PEM_write_bio_PrivateKey(bio,pkcs10->pk,NULL,NULL,0,NULL,NULL))
-		croak ("%s - PEM_write_bio_X509_REQ", pkcs10->req);
+		croak ("%s - PEM_write_bio_PrivateKey", pkcs10->pk);
 
 	RETVAL = sv_bio_final(bio);
 
