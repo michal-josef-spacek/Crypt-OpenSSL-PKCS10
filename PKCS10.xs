@@ -527,7 +527,7 @@ get_pem_pk(pkcs10,...)
 
 	CODE:
 	if((ix != 1 && items > 1) || (ix == 1 && items != 2))
-		croak("get_pem_req illegal/missing args");
+		croak("get_pem_pk illegal/missing args");
 	if(items > 1) {
 		bio = sv_bio_create_file(ST(1));
 	} else {
@@ -633,7 +633,7 @@ add_custom_ext(pkcs10, oid_SV, ext_SV)
 		pkcs10->exts = sk_X509_EXTENSION_new_null();
 
 	if ((nid = OBJ_create(oid, oid, oid)) == NID_undef)
-		croak ("add_custom_ext_raw: OBJ_create() for OID %s failed", oid);
+		croak ("add_custom_ext: OBJ_create() for OID %s failed", oid);
 	X509V3_EXT_add_alias(nid, NID_netscape_comment);
 	RETVAL = add_ext(pkcs10->exts, pkcs10->req, nid, ext);
 
