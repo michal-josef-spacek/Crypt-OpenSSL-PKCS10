@@ -677,6 +677,9 @@ new_from_file(class, filename_SV)
 	CODE:
 	filename = SvPV(filename_SV, filename_length);
 	fp = fopen(filename, "r");
+	if (fp == NULL) {
+		croak ("Cannot open file '%s'", filename);
+	}
 	req = PEM_read_X509_REQ (fp, NULL, NULL, NULL);
 	fclose(fp);
 
