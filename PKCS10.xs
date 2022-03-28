@@ -534,6 +534,9 @@ get_pem_pk(pkcs10,...)
 		bio = sv_bio_create();
 	}
 
+	if(!pkcs10->pk)
+		croak ("Private key doesn't exist");
+
 	/* get the certificate back out in a specified format. */
 	if(!PEM_write_bio_PrivateKey(bio,pkcs10->pk,NULL,NULL,0,NULL,NULL))
 		croak ("%s - PEM_write_bio_PrivateKey", pkcs10->pk);
